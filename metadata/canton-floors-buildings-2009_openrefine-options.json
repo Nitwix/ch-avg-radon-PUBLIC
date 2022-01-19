@@ -1,0 +1,50 @@
+{
+    "format": "csv",
+    "separator": ",",
+    "lineSeparator": "\n",
+    "encoding": "UTF-8",
+    "quoteAll": false,
+    "outputColumnHeaders": true,
+    "outputBlankRows": false,
+    "columns": [
+      {
+        "name": "Canton",
+        "reconSettings": {
+          "output": "entity-name",
+          "blankUnmatchedCells": false,
+          "linkToEntityPages": true
+        },
+        "dateSettings": {
+          "format": "iso-8601",
+          "useLocalTimeZone": false,
+          "omitTime": false
+        }
+      },
+      {
+        "name": "Nombre d'étages",
+        "reconSettings": {
+          "output": "entity-name",
+          "blankUnmatchedCells": false,
+          "linkToEntityPages": true
+        },
+        "dateSettings": {
+          "format": "iso-8601",
+          "useLocalTimeZone": false,
+          "omitTime": false
+        }
+      },
+      {
+        "name": "2009",
+        "reconSettings": {
+          "output": "entity-name",
+          "blankUnmatchedCells": false,
+          "linkToEntityPages": true
+        },
+        "dateSettings": {
+          "format": "iso-8601",
+          "useLocalTimeZone": false,
+          "omitTime": false
+        }
+      }
+    ]
+  }

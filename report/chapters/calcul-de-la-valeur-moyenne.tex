@@ -1,0 +1,53 @@
+Dans ce chapitre, nous décrirons la façon dont est calculée la valeur moyenne à partir de la BDD radon filtrée et corrigée et des autres données nécessaires.
+
+Le calcul s'effectue en plusieurs étapes que nous détaillerons ici.
+Chaque étape représente une partie de la formule \ref{formuleCalculFinalConcentration}.
+
+Pour plus de détails, veuillez vous référer à "src/main/scala/v01/ComputeAverageVolumetricActivity.scala" (voir \ref{sectionComputeAverageVolumetricActivityScala})
+
+\section{Calcul de la moyenne de concentration par bâtiment}
+Nous commençons par calculer la moyenne de concentration de radon par bâtiment, selon la formule suivante (moyenne arithmétique des valeurs mesurées dans le bâtiment $j$ de la commune $i$):
+
+\begin{equation}
+A_{ij} = \frac{1}{N_{ij}} \sum_{k=1}^{N_{ij}} A_{0, St_{ijk}}
+\end{equation}
+
+où
+\begin{itemize}
+\item $A_{ij}$ représente la concentration moyenne de radon dans le bâtiment $j$ de la commune $i$, en \bqmc
+\item $N_{ij}$ représente le nombre de mesures effectuées dans le bâtiment $j$ de la commune $i$
+\item $A_{0, St_{ijk}}$ représente la $k$-ème mesure, corrigée pour l'étage, effectuée dans le bâtiment $j$ de la commune $i$, en \bqmc
+\end{itemize}
+
+Concrètement, ce calcul se fait en groupant les entrées par ID\_HAUS et en calculant la moyenne pour chaque groupe.
+
+\section{Calcul de la moyenne de concentration par commune}
+Cette étape est très similaire à l'étape précédente. Nous décrirons donc uniquement la formule nécessaire au calcul.
+
+\begin{equation}
+A_i = \frac{1}{N_i} \sum_{j=1}^{N_i} A_{ij} 
+\end{equation}
+
+où 
+\begin{itemize}
+\item $A_i$ représente la concentration moyenne de radon dans la commune $i$, en \bqmc
+\item $N_i$ représente le nombre de bâtiments mesurés dans la commune $i$
+\item $A_{ij}$ représente la concentration moyenne de radon dans le bâtiment $j$ de la commune $i$, en \bqmc
+\end{itemize}
+
+\section{Calcul final de la concentration moyenne suisse}
+Finalement, dans cette étape nous calculons la valeur moyenne de concentration de radon dans les bâtiments suisses. La formule est une moyenne pondérée des concentrations des communes par les populations des communes.
+
+\begin{equation}
+A = \frac{1}{\sum_{i=1}^{N} pop_i} \sum_{i=1}^{N} pop_i \cdot A_i
+\end{equation}
+
+où
+\begin{itemize}
+\item $A$ représente la valeur moyenne de concentration de radon dans les bâtiments suisses, en \bqmc
+\item $pop_i$ représente la population de la commune $i$
+\item $N$ représente le nombre total de communes pour lesquelles des mesures existent
+\item $A_i$ représente la concentration moyenne de radon dans la commune $i$, en \bqmc
+\end{itemize}
+
+D'un point de vue du programme, on commence par calculer la somme du produit de la population par la concentration de la commune, puis on divise par la population totale \textbf{des communes dans lesquelles des mesures ont été effectuées.} (pour plus de détails voir \ref{sectionComputeAverageVolumetricActivityScala})

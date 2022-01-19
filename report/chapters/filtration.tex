@@ -1,0 +1,112 @@
+\newcommand{\nbEntreesAvantFiltration}{279'257}
+\newcommand{\nbEntreesApresFiltration}{168'056}
+\newcommand{\nbEntreesSupprParFiltration}{111'201}
+
+
+\newcommand\filterProps[2]{
+\begin{table}[H]
+\centering
+\begin{tabular}{|l|l|}
+\hline
+%Propriété                          & Valeur \\ \hline
+Nombre maximal d'entrées supprimées & #1   \\ \hline
+Pourcentage maximal d'entrées supprimées & #2\% \\ \hline
+\end{tabular}
+\end{table}
+}
+
+
+Dans ce chapitre nous décrirons les différents filtres qui sont appliqués à la BDD radon dans le but d'éliminer les mesures invalides et les mesures qui ne correspondent pas aux critères du calcul (locaux non habités).
+
+Pour plus de détails concernant le processus de filtration, veuillez vous référer au fichier "src/main/scala/v01/Filtering.scala" (voir \ref{sectionAverageFloor2020Scala}).
+
+\textit{Note}: Pour chaque filtre on compte le nombre d'entrées maximal que ce filtre peut supprimer, et quel pourcentage du nombre d'entrées initial cela représente. Ceci permet d'observer quels filtres auront le plus grand impact sur le calcul final. Ceci est montré comme suit:
+\filterProps{$N$}{$P$}
+
+Où
+\begin{itemize}
+\item $N$ représente le nombre d'entrées maximal que ce filtre peut supprimer
+\item $P$ représente le pourcentage du total initial d'entrées. $P = N / \nbEntreesAvantFiltration $
+\end{itemize}
+
+\section{Conserver uniquement les mesures valides}
+Ce filtre conserve uniquement les entrées où la colonne VALIDIERUNG vaut "Y".
+
+\filterProps{11'781}{4.22}
+
+%\section{Exclure les mesures de locaux inhabités}\label{filter:RAUMTYP}
+%Ce filtre supprime les entrées où la colonne RAUMTYP vaut "Keller", "K" ou "?"\footnote{Les entrées avec "?" ont été supprimées par mesure de précaution, pour éviter d'inclure des mesures indésirables.}
+
+%\filterProps{62'314}
+
+\section{Conserver uniquement les locaux avec séjour de personnes}\label{filter:PERSONENAUFENTHALT}
+Ce filtre conserve uniquement les entrées où la colonne PERSONENAUFENTHALT vaut "YES\_LONG" ou "YES\_SHORT"
+
+\filterProps{79'358}{28.42}
+
+\section{Conserver uniquement les entrées qui contiennent une mesure}
+Ce filtre conserve uniquement les entrées qui contiennent une valeur dans la colonne RADONKONZENTRATION\_BQ\_M3.
+
+\filterProps{6'486}{2.32}
+
+\section{Exclure les mesures effectuées dans des communes qui n'existent plus}
+Après inspection des données, il s'est avéré que certaines mesures ont été effectuées dans des communes qui n'existent plus dans les données de population de l'OFS (voir \ref{sectionNombreHabitantsCommunes}). Cela est probablement dû principalement à des fusions de communes. Il serait techniquement possible de trouver les communes qui ont fusionné et remplacer les anciens numéros de communes par les nouveaux numéros de communes fusionnées, mais cela serait relativement couteux en terme de temps. C'est pourquoi il a été décidé d'ignorer les mesures effectuées dans ces communes "disparues".
+
+Ce filtre fonctionne en plusieurs étapes:
+\subsection{Trouver les numéros des communes disparues}
+Pour ce faire, nous collectons l'ensemble des numéros de communes qui apparaissent dans la BDD radon (colonne GEMEINDENUMMER), nommons cet ensemble $C_{Rn}$. Nous collectons ensuite l'ensemble des numéros de communes qui apparaissent dans le tableau des populations des communes (voir \ref{sectionNombreHabitantsCommunes}), nommons cet ensemble $C_{Pop}$. 
+
+Les numéros des communes disparues sont donnés par la différence entre les ensembles: 
+\begin{equation}
+D = C_{Rn} - C_{Pop}
+\end{equation}
+
+Pour les données que nous utilisons, $|D| = 60$.
+
+Pour plus de détails concernant cette étape, voir "src/main/scala/main/DataExploration.scala".
+
+\subsection{Conserver uniquement les mesures effectuées dans les communes non disparues}
+Nous conservons ensuite uniquement les mesures qui ont été effectuées dans une commune qui n'apparait pas dans $D$.
+
+\filterProps{5'078}{1.82}
+
+\section{Garder uniquement les mesures effectuées dans les étages entre 0 et 20}\label{filter:ETAGE}
+Afin d'inclure uniquement les locaux d'habitation dans le calcul de la valeur moyenne de concentration, nous gardons uniquement les entrées où 
+\begin{equation}
+0 \leq ETAGE \leq 20
+\end{equation}
+
+\filterProps{73'059}{26.16}
+
+\section{Exclure les mesures effectuées avant un assainissement radon}\label{filter:SANIERUNG}
+Pour les bâtiments qui ont subit un assainissement radon, des mesures ont été effectuées \textit{avant} et \textit{après} assainissement. Afin de représenter plus précisement la valeur de concentration de radon réelle, il faut exclure les mesures effectuées avant assainissement des mesures considérées pour le calcul de la valeur moyenne de concentration.
+
+Ceci se fait en plusieurs étapes:
+\subsection{Trouver les identifiants des mesures effectuées avant assainissement}
+Dans cette étape, nous trouvons les identifiants des mesures (ID\_MESSUNG) effectuées avant assainissement (dans les cas où il existe des mesures avant et après assainissement pour un bâtiment donné). Appelons cette liste d'identifiants $L$.
+
+La méthode pour effectuer cette opération est la suivante:
+\begin{enumerate}
+\item Grouper les entrées par bâtiment (à l'aide de la colonne ID\_HAUS)
+\item Pour chaque bâtiment on trouve s'il y a eu un assainissement (si pour le bâtiment en question, une des entrées a MESSTYP = "Messung nach der Sanierung", on considère qu'il y a eu assainissement)
+\item Si c'est le cas, on ajoute tous les identifiants des mesures effectuées avant assainissement dans le bâtiment à $L$ (l'identifiant de toutes les entrées où MESSTYP = "Messung" pour le bâtiment). Autrement, $L$ reste inchangée.
+\end{enumerate}
+
+Pour plus de détails, voir "src/main/scala/v01/Filtering.scala:findIdsOfMeasurementsBeforeRemediation".
+
+\subsection{Exclure les mesures effectuées avant assainissement}
+Cette étape est relativement simple une fois qu'on a obtenu $L$. Il suffit de supprimer les mesures dont l'identifiant se trouve dans $L$.
+
+\filterProps{5'623}{2.01}
+
+\section{Exclure les mesures de concentration = 0 \bqmc}
+La BDD contient des entrées où RADONKONZENTRATION\_BQ\_M3 vaut 0, et il est impossible qu'un appareil de mesure correctement utilisé mesure une moyenne de 0 \bqmc. Il faut donc exclure ces mesures du calcul final. 
+Par mesure de précaution, le filtre conserve uniquement les mesures $> 0$ \bqmc et supprime donc aussi d'éventuelles valeurs négatives de concentration.
+
+\filterProps{1'678}{0.60}
+
+\section{Conclusion}
+
+Après filtration, la BDD radon est réduite à \nbEntreesApresFiltration\ entrées. À l'origine, elle contenait \nbEntreesAvantFiltration\ entrées. L'étape de filtration supprime donc \nbEntreesSupprParFiltration\ entrées.
+
+Il faut noter que le nombre d'entrées supprimées ne correspond pas à la somme du nombre maximal d'entrées supprimées par chaque filtre, car certaines entrées sont exclues par plusieurs filtres à la fois (par exemple une mesure dans une cave effectuée avant un assainissement sera supprimée à cause des filtres décrits en \ref{filter:PERSONENAUFENTHALT}, \ref{filter:ETAGE}, \ref{filter:SANIERUNG}). 

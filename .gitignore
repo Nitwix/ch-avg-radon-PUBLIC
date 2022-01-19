@@ -1,0 +1,20 @@
+*.class
+*.log
+
+.bloop/
+.bsp/
+.metals/
+.vscode/
+
+# Exclude the dataset files, but include the code related to data
+data/
+!src/main/scala/data/
+
+project/project
+project/target
+project/metals.sbt
+
+target/
+
+# ignore logs directory
+logs/

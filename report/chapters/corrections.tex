@@ -1,0 +1,13 @@
+Après filtration, les mesures doivent encore être corrigées en fonction de l'étage auquel elles ont été mesurées (comme expliqué dans la section \ref{introCorrectionEtage}).
+
+Nous décrirons ici les étapes qui permettent de corriger les mesures en fonction de l'étage.
+Pour chaque entrée, il faut:
+\begin{enumerate}
+\item Récupérer le canton dans lequel la mesure a été effectuée (colonne KANTON)
+\item Trouver l'étage d'habitation moyen du canton grâce aux données importées à la section \ref{importationEtageMoyen} (valeur $St_m$)
+\item Récupérer l'étage auquel la mesure a été effectué (colonne ETAGE $\rightarrow$ valeur $St$)
+\item Récupérer la valeur mesurée de concentration (colonne RADONKONZENTRATION\_BQ\_M3 $\rightarrow$ valeur $A_0$)
+\item Calculer la valeur corrigée de concentration grâce à la formule \ref{formuleCorrectionEtage}
+\end{enumerate}
+
+Pour plus de détail, veuillez vous référer à "src/main/scala/v01/Corrections.scala" (voir \ref{sectionCorrectionsScala})

@@ -1,0 +1,86 @@
+\section{But du document}
+Le but de ce document est de décrire le processus de traitement de données utilisé pour calculer la valeur moyenne de concentration de radon dans les bâtiments suisses à partir des données de la base de données nationale de mesures du radon. 
+
+\textit{Note}: Le code source du programme servant à effectuer ce calcul doit être mis à disposition avec ce document pour que le lecteur puisse s'y référer si besoin.
+
+\section{Remarques}
+Veuillez prendre compte des remarques suivantes lors de la lecture de ce document:
+\begin{itemize}
+\item Sauf indication contraire, toutes les dates sont données au format ISO-8601\footnote{\url{https://fr.wikipedia.org/wiki/ISO_8601}}.
+\item Sauf indication contraire, les chemins d'accès faisant référence à des dossiers ou des fichiers du code source sont donnés depuis la racine du projet.
+\end{itemize}
+
+\section{Abbréviation utilisées dans le document}
+Afin d'améliorer la lisibilité du document, nous utiliserons les abbréviations suivantes:
+
+\begin{itemize}
+\item \textbf{OFS} Office fédéral de la statistique
+\item \textbf{BDD} Base de données
+\end{itemize}
+
+\section{Technologies utilisées pour le traitement de données}
+Le programme effectuant le traitement de données et autres calculs est écrit dans le langage de programmation Scala (2.12.15)\footnote{\url{https://www.scala-lang.org/}}. La librairie utilisée pour faciliter les opérations sur des grands ensembles de données est Apache Spark (3.1.2) \footnote{\url{https://spark.apache.org/docs/3.1.2/}}. 
+
+Pour simplifier l'importation des données dans le programme, l'outil OpenRefine (3.5.0) \footnote{\url{https://openrefine.org/}} a été utilisé pour prétraiter les données (voir chapitre \ref{chapterImportationEtPretraitement}).
+
+\section{Référence pour la méthode de calcul}\label{sectionReferenceCalcul}
+Le calcul décrit dans le présent document est basé sur le calcul de la valeur moyenne de concentration du radon effectué en 2004. Le document de référence se nomme "Strahlenexposition Bevölkerung 2004" et la section d'intérêt est la section 2 "Beitrag von Radon". 
+
+Dans ce document, le calcul est effectué en 3 étapes.
+\subsection{Correction pour la saison}
+La moyenne de concentration doit être calculée en considérant une moyenne annuelle, en prenant en compte que les séjours à l'intérieur sont plus longs en hiver qu'en été. Cette correction a déjà été appliquée au moment où les mesures sont entrées dans la BDD radon. 
+
+Pour refléter cette correction dans la notation (et pour garder la même notation que dans le document de référence), nous considérerons que $A_0$ représente la valeur mesurée de concentration de radon en \bqmc, corrigée pour représenter une moyenne annuelle.
+
+\subsection{Correction pour l'étage} \label{introCorrectionEtage}
+Pour mieux refléter la concentration de radon dans laquelle la population vit, une correction a été appliquée lors du calcul de 2004. Les valeurs mesurées au-dessous de l'étage moyen d'habitation des bâtiments du canton sont attenuées, et les valeurs mesurées au-dessus sont accentuées. La formule de correction est la suivante:
+
+\begin{equation}\label{formuleCorrectionEtage}
+A_{0,St} = A_0 \cdot e^{-0.19 \cdot (St_m - St)}
+\end{equation}
+
+où
+
+\begin{itemize}
+\item $A_{0,St}$ représente la concentration corrigée pour l'étage, en \bqmc
+\item $A_0$ représente la concentration avant correction, en \bqmc
+\item $e^x$ représente la fonction exponentielle évaluée en $x$
+\item $St_m$ L'étage moyen d'habitation dans le canton où la mesure a été effectuée, $\in \mathbb{R}$
+\item $St$ L'étage auquel la mesure a été effectuée, $\in \mathbb{Z}$
+\end{itemize}
+
+\subsection{Calcul final de la concentration moyenne suisse}
+Le calcul final de la concentration moyenne de radon dans les locaux d'habitation et de séjour est calculée comme suit:
+
+\begin{equation}\label{formuleCalculFinalConcentration}
+A = \frac{1}{\sum_{i=1}^{N} pop_i} \sum_{i=1}^{N} pop_i [ \frac{1}{N_i} \sum_{j=1}^{N_i} [\frac{1}{N_{ij}} \sum_{k=1}^{N_{ij}} A_{0, St_{ijk}}] ]
+\end{equation}
+
+où
+
+\begin{itemize}
+\item $A$ représente la concentration moyenne de radon finale, en \bqmc
+\item $pop_i$ représente la population de la commune $i$
+\item $N$ représente le nombre total de communes pour lesquelles des mesures existent
+\item $N_i$ représente le nombre de bâtiments mesurés dans la commune $i$
+\item $N_{ij}$ représente le nombre de mesures effectuées dans le bâtiment $j$ de la commune $i$
+\item $A_{0, St_{ijk}}$ représente la $k$-ème mesure, corrigée pour l'étage, effectuée dans le bâtiment $j$ de la commune $i$, en \bqmc
+\end{itemize}
+
+
+\section{Vue d'ensemble du processus de traitement de données}
+Nous décrirons ici le processus du traitement des données, depuis les données brutes décrites dans le chapitre \ref{chapterSourcesDesDonnees}, jusqu'à l'obtention de la valeur moyenne de concentration de radon. Chaque étape du processus sera expliquée en détail dans les chapitres suivants.
+
+\subsection{Importation et prétraitement}
+Dans cette étape, les données brutes sont importées dans le programme et sont prétraitées pour les étapes suivantes.
+
+\subsection{Filtration}
+Dans cette étape, les données brutes prétraitées sont filtrées afin de supprimer les entrées invalides et les valeurs qu'on ne veut pas retenir pour le calcul final de la valeur moyenne (par exemple les mesures dans des locaux qui ne sont pas des locaux de séjour prolongé).
+
+\subsection{Corrections}
+Dans cette étape, les mesures brutes subissent une correction ou ajustement qui dépend de l'étage dans lequel la mesure a été prise. 
+
+\subsection{Calcul de la valeur moyenne}
+Finalement les données traitées sont utilisées pour calculer la concentration moyenne de radon dans les bâtiments suisses selon la méthode appliquée en 2004. 
+
+

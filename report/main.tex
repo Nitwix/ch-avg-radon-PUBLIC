@@ -1,0 +1,74 @@
+\documentclass{report}
+    % General document formatting
+    %\usepackage[margin=0.7in]{geometry}
+    %\usepackage[parfill]{parskip}
+    \usepackage[utf8]{inputenc}
+    
+    % Related to math
+    \usepackage{amsmath,amssymb,amsfonts,amsthm}
+    
+    \usepackage[french]{babel}
+    \usepackage{hyperref}
+    
+    \usepackage{graphicx}
+    \usepackage{float}
+	\graphicspath{ {./images/} }
+	
+	\usepackage{xcolor}
+	
+	\usepackage{listings}
+	\lstset{
+	  basicstyle=\ttfamily,
+	  columns=fullflexible,
+	  frame=single,
+	  breaklines=true,
+	  postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space},
+	}
+	
+	\usepackage{csvsimple}
+	\usepackage{multicol}
+	\setlength{\columnsep}{1cm}
+	
+	\usepackage[useregional]{datetime2}
+    
+\title{
+{Rapport sur le processus de calcul de la valeur moyenne de concentration de radon dans les bâtiments suisses}\\
+{\large Office fédéral de la santé publique (OFSP)}\\
+%{\includegraphics{university.jpg}}
+}
+\author{Niels Lachat}
+\date{\today}
+
+\input{custom_commands}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\chapter{Introduction}
+\input{chapters/introduction}
+
+\chapter{Sources des données}\label{chapterSourcesDesDonnees}
+\input{chapters/sources-des-donnees}
+
+\chapter{Importation et prétraitement (preprocessing)}\label{chapterImportationEtPretraitement}
+\input{chapters/importation-et-pretraitement}
+
+\chapter{Filtration}
+\input{chapters/filtration}
+
+\chapter{Corrections}
+\input{chapters/corrections}
+
+\chapter{Calcul de la valeur moyenne}
+\input{chapters/calcul-de-la-valeur-moyenne}
+
+\chapter{Conclusion}
+\input{chapters/conclusion}
+
+\chapter{Annexes}
+\input{annexes}
+
+\end{document}
